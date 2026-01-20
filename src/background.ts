@@ -20,21 +20,67 @@ Important:
 - Do NOT change the perspective (first person stays first person, etc.)
 - Return ONLY the refined text, no explanations or comments`;
 
+interface Settings {
+  provider?: 'openai' | 'ollama';
+  openaiApiKey?: string;
+  ollamaUrl?: string;
+  ollamaModel?: string;
+}
+
+interface RefineTextRequest {
+  action: 'refineText';
+  text: string;
+}
+
+interface RefineTextResponse {
+  refinedText?: string;
+  error?: string;
+}
+
+interface OpenAIResponse {
+  choices?: {
+    message?: {
+      content: string;
+    };
+  }[];
+  error?: {
+    message: string;
+  };
+}
+
+interface OllamaResponse {
+  message?: {
+    content: string;
+  };
+}
+
 // Listen for messages from content script
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === 'refineText') {
-    handleRefineText(request.text)
-      .then(refinedText => sendResponse({ refinedText }))
-      .catch(error => sendResponse({ error: error.message }));
+chrome.runtime.onMessage.addListener(
+  (
+    request: RefineTextRequest,
+    _sender: chrome.runtime.MessageSender,
+    sendResponse: (response: RefineTextResponse) => void
+  ): boolean => {
+    if (request.action === 'refineText') {
+      handleRefineText(request.text)
+        .then((refinedText) => sendResponse({ refinedText }))
+        .catch((error: Error) => sendResponse({ error: error.message }));
 
-    // Return true to indicate we'll send response asynchronously
-    return true;
+      // Return true to indicate we'll send response asynchronously
+      return true;
+    }
+    return false;
   }
-});
+);
 
-async function handleRefineText(text) {
+async function handleRefineText(text: string): Promise<string> {
   // Get settings from storage
-  const settings = await chrome.storage.local.get(['provider', 'openaiApiKey', 'ollamaUrl', 'ollamaModel']);
+  const settings = (await chrome.storage.local.get([
+    'provider',
+    'openaiApiKey',
+    'ollamaUrl',
+    'ollamaModel',
+  ])) as Settings;
   const provider = settings.provider || 'openai';
 
   if (provider === 'openai') {
@@ -51,27 +97,27 @@ async function handleRefineText(text) {
   }
 }
 
-async function refineWithOpenAI(text, apiKey) {
+async function refineWithOpenAI(text: string, apiKey: string): Promise<string> {
   try {
     const response = await fetch(OPENAI_API_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${apiKey}`
+        Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: `Please refine the following text:\n\n${text}` }
+          { role: 'user', content: `Please refine the following text:\n\n${text}` },
         ],
         temperature: 0.3,
-        max_tokens: 2048
-      })
+        max_tokens: 2048,
+      }),
     });
 
     if (!response.ok) {
-      const errorData = await response.json().catch(() => ({}));
+      const errorData: OpenAIResponse = await response.json().catch(() => ({}));
 
       if (response.status === 401) {
         throw new Error('Invalid API key. Please check your OpenAI API key in settings.');
@@ -84,7 +130,7 @@ async function refineWithOpenAI(text, apiKey) {
       }
     }
 
-    const data = await response.json();
+    const data: OpenAIResponse = await response.json();
 
     if (!data.choices || !data.choices[0] || !data.choices[0].message) {
       throw new Error('Unexpected response from OpenAI. Please try again.');
@@ -92,47 +138,49 @@ async function refineWithOpenAI(text, apiKey) {
 
     return data.choices[0].message.content.trim();
   } catch (error) {
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+    if (error instanceof TypeError && error.message.includes('fetch')) {
       throw new Error('Network error. Please check your internet connection.');
     }
     throw error;
   }
 }
 
-async function refineWithOllama(text, ollamaUrl, model) {
+async function refineWithOllama(text: string, ollamaUrl: string, model: string): Promise<string> {
   try {
     // Normalize URL - prefer 127.0.0.1 over localhost for CORS consistency
-    let normalizedUrl = ollamaUrl.replace('localhost', '127.0.0.1');
-    
+    const normalizedUrl = ollamaUrl.replace('localhost', '127.0.0.1');
+
     const response = await fetch(`${normalizedUrl}/api/chat`, {
       method: 'POST',
       mode: 'cors',
       headers: {
         'Content-Type': 'application/json',
-        'Accept': 'application/json'
+        Accept: 'application/json',
       },
       body: JSON.stringify({
         model: model,
         messages: [
           { role: 'system', content: SYSTEM_PROMPT },
-          { role: 'user', content: `Please refine the following text:\n\n${text}` }
+          { role: 'user', content: `Please refine the following text:\n\n${text}` },
         ],
-        stream: false
-      })
+        stream: false,
+      }),
     });
 
     if (!response.ok) {
       if (response.status === 404) {
         throw new Error(`Model "${model}" not found. Make sure it's pulled in Ollama.`);
       } else if (response.status === 403) {
-        throw new Error(`CORS error (403). Restart Ollama with: OLLAMA_ORIGINS="chrome-extension://*" ollama serve`);
+        throw new Error(
+          `CORS error (403). Restart Ollama with: OLLAMA_ORIGINS="chrome-extension://*" ollama serve`
+        );
       } else {
         const errorText = await response.text().catch(() => '');
         throw new Error(`Ollama error (${response.status}): ${errorText || 'Unknown error'}`);
       }
     }
 
-    const data = await response.json();
+    const data: OllamaResponse = await response.json();
 
     if (!data.message || !data.message.content) {
       throw new Error('Unexpected response from Ollama. Please try again.');
@@ -140,7 +188,7 @@ async function refineWithOllama(text, ollamaUrl, model) {
 
     return data.message.content.trim();
   } catch (error) {
-    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+    if (error instanceof TypeError && error.message.includes('fetch')) {
       throw new Error('Cannot connect to Ollama. Make sure Ollama is running on ' + ollamaUrl);
     }
     throw error;

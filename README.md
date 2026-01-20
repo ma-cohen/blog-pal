@@ -12,18 +12,25 @@ AI-powered writing refinement for bloggers. Keeps your tone, fixes everything el
 
 ## Installation
 
-### 1. Generate Icons
+### 1. Install Dependencies and Build
+
+```bash
+npm install
+npm run build
+```
+
+### 2. Generate Icons (if needed)
 
 Open `generate-icons.html` in your browser and click "Download All Icons". Move the downloaded PNG files to the `icons/` folder.
 
-### 2. Load Extension in Chrome
+### 3. Load Extension in Chrome
 
 1. Open Chrome and go to `chrome://extensions/`
 2. Enable "Developer mode" (toggle in top right)
 3. Click "Load unpacked"
 4. Select the `blog-pal` folder
 
-### 3. Add Your API Key
+### 4. Add Your API Key
 
 1. Click the BlogPal extension icon in Chrome toolbar
 2. Enter your OpenAI API key
@@ -52,11 +59,39 @@ Open `generate-icons.html` in your browser and click "Download All Icons". Move 
 4. Create a new API key
 5. Copy and paste it into BlogPal settings
 
+## Development
+
+### Build Commands
+
+```bash
+npm run build   # Compile TypeScript to JavaScript
+npm run watch   # Watch mode for development
+npm run clean   # Remove dist folder
+```
+
+### Project Structure
+
+```
+blog-pal/
+├── src/                # TypeScript source files
+│   ├── background.ts   # Service worker
+│   ├── content.ts      # Content script
+│   └── popup.ts        # Settings popup
+├── dist/               # Compiled JavaScript (auto-generated)
+├── icons/              # Extension icons
+├── manifest.json       # Chrome extension manifest
+├── popup.html          # Settings UI
+├── styles.css          # Content script styles
+├── tsconfig.json       # TypeScript configuration
+└── package.json        # Dependencies and scripts
+```
+
 ## Tech Stack
 
 - Chrome Extension (Manifest V3)
+- TypeScript
 - OpenAI GPT-4o-mini API
-- Vanilla JavaScript (no dependencies)
+- Ollama (optional, for local AI)
 
 ## License
 

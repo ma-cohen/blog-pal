@@ -1,15 +1,15 @@
 // BlogPal Content Script
 // Handles text selection, floating button, and refinement UI
 
-(function() {
+(function (): void {
   'use strict';
 
-  let floatingButton = null;
-  let refinementPopup = null;
+  let floatingButton: HTMLDivElement | null = null;
+  let refinementPopup: HTMLDivElement | null = null;
   let selectedText = '';
 
   // Create floating button element
-  function createFloatingButton() {
+  function createFloatingButton(): HTMLDivElement {
     const button = document.createElement('div');
     button.id = 'blogpal-floating-button';
     button.innerHTML = `
@@ -28,7 +28,7 @@
   }
 
   // Create refinement popup element
-  function createRefinementPopup() {
+  function createRefinementPopup(): HTMLDivElement {
     const popup = document.createElement('div');
     popup.id = 'blogpal-refinement-popup';
     popup.innerHTML = `
@@ -73,14 +73,21 @@
     document.body.appendChild(popup);
 
     // Event listeners
-    popup.querySelector('#blogpal-close').addEventListener('click', hidePopup);
-    popup.querySelector('#blogpal-copy').addEventListener('click', handleCopy);
+    const closeBtn = popup.querySelector('#blogpal-close');
+    const copyBtn = popup.querySelector('#blogpal-copy');
+
+    if (closeBtn) {
+      closeBtn.addEventListener('click', hidePopup);
+    }
+    if (copyBtn) {
+      copyBtn.addEventListener('click', handleCopy);
+    }
 
     return popup;
   }
 
   // Initialize elements
-  function init() {
+  function init(): void {
     floatingButton = createFloatingButton();
     refinementPopup = createRefinementPopup();
 
@@ -91,16 +98,19 @@
   }
 
   // Handle mouse up - check for text selection
-  function handleMouseUp(e) {
+  function handleMouseUp(e: MouseEvent): void {
     // Ignore clicks on our own elements
-    if (e.target.closest('#blogpal-floating-button') ||
-        e.target.closest('#blogpal-refinement-popup')) {
+    const target = e.target as Element;
+    if (
+      target.closest('#blogpal-floating-button') ||
+      target.closest('#blogpal-refinement-popup')
+    ) {
       return;
     }
 
     setTimeout(() => {
       const selection = window.getSelection();
-      const text = selection.toString().trim();
+      const text = selection?.toString().trim() || '';
 
       if (text.length > 0) {
         selectedText = text;
@@ -112,15 +122,18 @@
   }
 
   // Handle mouse down - hide button if clicking elsewhere
-  function handleMouseDown(e) {
-    if (!e.target.closest('#blogpal-floating-button') &&
-        !e.target.closest('#blogpal-refinement-popup')) {
+  function handleMouseDown(e: MouseEvent): void {
+    const target = e.target as Element;
+    if (
+      !target.closest('#blogpal-floating-button') &&
+      !target.closest('#blogpal-refinement-popup')
+    ) {
       hideFloatingButton();
     }
   }
 
   // Handle escape key
-  function handleKeyDown(e) {
+  function handleKeyDown(e: KeyboardEvent): void {
     if (e.key === 'Escape') {
       hideFloatingButton();
       hidePopup();
@@ -128,7 +141,9 @@
   }
 
   // Show floating button near selection
-  function showFloatingButton(x, y) {
+  function showFloatingButton(x: number, y: number): void {
+    if (!floatingButton) return;
+
     const buttonWidth = 90;
     const buttonHeight = 32;
     const padding = 10;
@@ -150,14 +165,14 @@
   }
 
   // Hide floating button
-  function hideFloatingButton() {
+  function hideFloatingButton(): void {
     if (floatingButton) {
       floatingButton.style.display = 'none';
     }
   }
 
   // Handle refine button click
-  async function handleRefineClick(e) {
+  async function handleRefineClick(e: Event): Promise<void> {
     e.preventDefault();
     e.stopPropagation();
 
@@ -167,55 +182,66 @@
   }
 
   // Show refinement popup
-  function showPopup() {
-    const loading = refinementPopup.querySelector('#blogpal-loading');
-    const result = refinementPopup.querySelector('#blogpal-result');
-    const error = refinementPopup.querySelector('#blogpal-error');
+  function showPopup(): void {
+    if (!refinementPopup) return;
 
-    loading.style.display = 'flex';
-    result.style.display = 'none';
-    error.style.display = 'none';
+    const loading = refinementPopup.querySelector<HTMLElement>('#blogpal-loading');
+    const result = refinementPopup.querySelector<HTMLElement>('#blogpal-result');
+    const error = refinementPopup.querySelector<HTMLElement>('#blogpal-error');
+
+    if (loading) loading.style.display = 'flex';
+    if (result) result.style.display = 'none';
+    if (error) error.style.display = 'none';
 
     // Center popup in viewport
     refinementPopup.style.display = 'block';
   }
 
   // Hide refinement popup
-  function hidePopup() {
+  function hidePopup(): void {
     if (refinementPopup) {
       refinementPopup.style.display = 'none';
     }
   }
 
   // Show result in popup
-  function showResult(text) {
-    const loading = refinementPopup.querySelector('#blogpal-loading');
-    const result = refinementPopup.querySelector('#blogpal-result');
-    const resultText = refinementPopup.querySelector('#blogpal-result-text');
+  function showResult(text: string): void {
+    if (!refinementPopup) return;
 
-    loading.style.display = 'none';
-    result.style.display = 'block';
-    resultText.textContent = text;
+    const loading = refinementPopup.querySelector<HTMLElement>('#blogpal-loading');
+    const result = refinementPopup.querySelector<HTMLElement>('#blogpal-result');
+    const resultText = refinementPopup.querySelector<HTMLElement>('#blogpal-result-text');
+
+    if (loading) loading.style.display = 'none';
+    if (result) result.style.display = 'block';
+    if (resultText) resultText.textContent = text;
   }
 
   // Show error in popup
-  function showError(message) {
-    const loading = refinementPopup.querySelector('#blogpal-loading');
-    const error = refinementPopup.querySelector('#blogpal-error');
-    const errorText = refinementPopup.querySelector('#blogpal-error-text');
+  function showError(message: string): void {
+    if (!refinementPopup) return;
 
-    loading.style.display = 'none';
-    error.style.display = 'block';
-    errorText.textContent = message;
+    const loading = refinementPopup.querySelector<HTMLElement>('#blogpal-loading');
+    const error = refinementPopup.querySelector<HTMLElement>('#blogpal-error');
+    const errorText = refinementPopup.querySelector<HTMLElement>('#blogpal-error-text');
+
+    if (loading) loading.style.display = 'none';
+    if (error) error.style.display = 'block';
+    if (errorText) errorText.textContent = message;
+  }
+
+  interface RefineTextResponse {
+    refinedText?: string;
+    error?: string;
   }
 
   // Refine text using configured provider (OpenAI or Ollama)
-  async function refineText(text) {
+  async function refineText(text: string): Promise<void> {
     try {
       // Send message to background script to make API call
       chrome.runtime.sendMessage(
         { action: 'refineText', text: text },
-        (response) => {
+        (response: RefineTextResponse) => {
           if (chrome.runtime.lastError) {
             showError('Extension error. Please try again.');
             return;
@@ -223,7 +249,7 @@
 
           if (response.error) {
             showError(response.error);
-          } else {
+          } else if (response.refinedText) {
             showResult(response.refinedText);
           }
         }
@@ -235,12 +261,16 @@
   }
 
   // Handle copy to clipboard
-  async function handleCopy() {
-    const resultText = refinementPopup.querySelector('#blogpal-result-text').textContent;
-    const copyBtn = refinementPopup.querySelector('#blogpal-copy');
+  async function handleCopy(): Promise<void> {
+    if (!refinementPopup) return;
+
+    const resultText = refinementPopup.querySelector<HTMLElement>('#blogpal-result-text');
+    const copyBtn = refinementPopup.querySelector<HTMLButtonElement>('#blogpal-copy');
+
+    if (!resultText || !copyBtn) return;
 
     try {
-      await navigator.clipboard.writeText(resultText);
+      await navigator.clipboard.writeText(resultText.textContent || '');
 
       // Show success feedback
       const originalHTML = copyBtn.innerHTML;

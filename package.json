@@ -1,0 +1,14 @@
+{
+  "name": "blog-pal",
+  "version": "1.0.0",
+  "description": "AI-powered writing refinement for bloggers",
+  "scripts": {
+    "build": "tsc",
+    "watch": "tsc --watch",
+    "clean": "rm -rf dist"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.268",
+    "typescript": "^5.4.5"
+  }
+}
