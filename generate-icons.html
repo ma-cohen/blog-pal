@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>BlogPal Icon Generator</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 600px;
+      margin: 40px auto;
+      padding: 20px;
+    }
+    h1 { color: #6366f1; }
+    .icons { display: flex; gap: 20px; flex-wrap: wrap; margin: 20px 0; }
+    .icon-box { text-align: center; }
+    canvas { border: 1px solid #ddd; border-radius: 4px; }
+    button {
+      background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 16px;
+      cursor: pointer;
+      margin-top: 20px;
+    }
+    button:hover { opacity: 0.9; }
+    .instructions {
+      background: #f3f4f6;
+      padding: 16px;
+      border-radius: 8px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>BlogPal Icon Generator</h1>
+  <p>Click the button below to download all icon sizes as PNG files.</p>
+
+  <div class="icons">
+    <div class="icon-box">
+      <canvas id="icon16" width="16" height="16"></canvas>
+      <p>16x16</p>
+    </div>
+    <div class="icon-box">
+      <canvas id="icon32" width="32" height="32"></canvas>
+      <p>32x32</p>
+    </div>
+    <div class="icon-box">
+      <canvas id="icon48" width="48" height="48"></canvas>
+      <p>48x48</p>
+    </div>
+    <div class="icon-box">
+      <canvas id="icon128" width="128" height="128"></canvas>
+      <p>128x128</p>
+    </div>
+  </div>
+
+  <button onclick="downloadAll()">Download All Icons</button>
+
+  <div class="instructions">
+    <strong>Instructions:</strong>
+    <ol>
+      <li>Click "Download All Icons"</li>
+      <li>Move the downloaded PNG files to the <code>icons/</code> folder</li>
+      <li>Reload the extension in Chrome</li>
+    </ol>
+  </div>
+
+  <script>
+    const sizes = [16, 32, 48, 128];
+
+    function drawIcon(canvas) {
+      const ctx = canvas.getContext('2d');
+      const size = canvas.width;
+
+      // Gradient background (purple to blue)
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#6C63FF');
+      gradient.addColorStop(1, '#8A7CFF');
+
+      // Rounded square background
+      const bgRadius = size * 0.22;
+      ctx.beginPath();
+      ctx.moveTo(bgRadius, 0);
+      ctx.lineTo(size - bgRadius, 0);
+      ctx.quadraticCurveTo(size, 0, size, bgRadius);
+      ctx.lineTo(size, size - bgRadius);
+      ctx.quadraticCurveTo(size, size, size - bgRadius, size);
+      ctx.lineTo(bgRadius, size);
+      ctx.quadraticCurveTo(0, size, 0, size - bgRadius);
+      ctx.lineTo(0, bgRadius);
+      ctx.quadraticCurveTo(0, 0, bgRadius, 0);
+      ctx.closePath();
+      ctx.fillStyle = gradient;
+      ctx.fill();
+
+      // Chat bubble (single shape with tail) - centered
+      const bubbleWidth = size * 0.7;
+      const bubbleHeight = size * 0.5;
+      const tailHeight = size * 0.09;
+      const totalHeight = bubbleHeight + tailHeight;
+      const bubbleX = (size - bubbleWidth) / 2;
+      const bubbleY = (size - totalHeight) / 2;
+      const bubbleRadius = size * 0.12;
+
+      ctx.beginPath();
+      // Top left corner
+      ctx.moveTo(bubbleX + bubbleRadius, bubbleY);
+      // Top edge
+      ctx.lineTo(bubbleX + bubbleWidth - bubbleRadius, bubbleY);
+      // Top right corner
+      ctx.quadraticCurveTo(bubbleX + bubbleWidth, bubbleY, bubbleX + bubbleWidth, bubbleY + bubbleRadius);
+      // Right edge
+      ctx.lineTo(bubbleX + bubbleWidth, bubbleY + bubbleHeight - bubbleRadius);
+      // Bottom right corner
+      ctx.quadraticCurveTo(bubbleX + bubbleWidth, bubbleY + bubbleHeight, bubbleX + bubbleWidth - bubbleRadius, bubbleY + bubbleHeight);
+      // Bottom edge to tail
+      ctx.lineTo(bubbleX + size * 0.22, bubbleY + bubbleHeight);
+      // Tail (smaller)
+      ctx.lineTo(bubbleX + size * 0.14, bubbleY + bubbleHeight + size * 0.09);
+      ctx.lineTo(bubbleX + size * 0.16, bubbleY + bubbleHeight);
+      // Bottom edge from tail
+      ctx.lineTo(bubbleX + bubbleRadius, bubbleY + bubbleHeight);
+      // Bottom left corner
+      ctx.quadraticCurveTo(bubbleX, bubbleY + bubbleHeight, bubbleX, bubbleY + bubbleHeight - bubbleRadius);
+      // Left edge
+      ctx.lineTo(bubbleX, bubbleY + bubbleRadius);
+      // Top left corner
+      ctx.quadraticCurveTo(bubbleX, bubbleY, bubbleX + bubbleRadius, bubbleY);
+      ctx.closePath();
+      ctx.fillStyle = '#FFFFFF';
+      ctx.fill();
+
+      // Face center (inside bubble)
+      const faceCenterX = size / 2;
+      const faceCenterY = bubbleY + bubbleHeight * 0.5;
+
+      // Eyes (small dots)
+      const eyeRadius = size * 0.04;
+      const eyeSpacing = size * 0.12;
+      const eyeY = faceCenterY - size * 0.02;
+
+      ctx.beginPath();
+      ctx.arc(faceCenterX - eyeSpacing, eyeY, eyeRadius, 0, Math.PI * 2);
+      ctx.fillStyle = '#6C63FF';
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(faceCenterX + eyeSpacing, eyeY, eyeRadius, 0, Math.PI * 2);
+      ctx.fillStyle = '#6C63FF';
+      ctx.fill();
+
+      // Smile (thicker, friendly curve)
+      ctx.beginPath();
+      ctx.arc(faceCenterX, faceCenterY - size * 0.02, size * 0.1, Math.PI * 0.2, Math.PI * 0.8);
+      ctx.strokeStyle = '#6C63FF';
+      ctx.lineWidth = Math.max(size * 0.04, 1.5);
+      ctx.lineCap = 'round';
+      ctx.stroke();
+    }
+
+    // Draw all icons on load
+    sizes.forEach(size => {
+      const canvas = document.getElementById(`icon${size}`);
+      drawIcon(canvas);
+    });
+
+    function downloadAll() {
+      sizes.forEach(size => {
+        const canvas = document.getElementById(`icon${size}`);
+        const link = document.createElement('a');
+        link.download = `icon${size}.png`;
+        link.href = canvas.toDataURL('image/png');
+        link.click();
+      });
+    }
+  </script>
+</body>
+</html>
